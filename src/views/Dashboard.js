@@ -43,25 +43,62 @@ import {
 } from "reactstrap";
 
 // core components
-import {
-  chartExample1,
-  chartExample2,
-  chartExample3,
-  chartExample4
-} from "variables/charts.js";
+import { options } from "variables/charts.js";
 
 class Dashboard extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      bigChartData: "data1"
+      typeCase: "confirmed",
+      covidData: []
     };
   }
-  setBgChartData = (name) => {
+
+  componentDidMount() {
+    fetch("https://pomber.github.io/covid19/timeseries.json")
+      .then((response) => response.json())
+      .then((data) => this.setState({ covidData: data["Morocco"] }));
+  }
+
+  setTypeCase = (name) => {
     this.setState({
-      bigChartData: name
+      typeCase: name
     });
   };
+
+  data = (canvas) => {
+    let ctx = canvas.getContext("2d");
+
+    let gradientStroke = ctx.createLinearGradient(0, 230, 0, 50);
+
+    gradientStroke.addColorStop(1, "rgba(29,140,248,0.2)");
+    gradientStroke.addColorStop(0.4, "rgba(29,140,248,0.0)");
+    gradientStroke.addColorStop(0, "rgba(29,140,248,0)"); //blue colors
+
+    return {
+      labels: this.state.covidData.map((stats) => stats["date"]),
+      datasets: [
+        {
+          label: "Total cases",
+          fill: true,
+          backgroundColor: gradientStroke,
+          borderColor: "#1f8ef1",
+          borderWidth: 2,
+          borderDash: [],
+          borderDashOffset: 0.0,
+          pointBackgroundColor: "#1f8ef1",
+          pointBorderColor: "rgba(255,255,255,0)",
+          pointHoverBackgroundColor: "#1f8ef1",
+          pointBorderWidth: 20,
+          pointHoverRadius: 4,
+          pointHoverBorderWidth: 15,
+          pointRadius: 4,
+          data: this.state.covidData.map((stats) => stats[this.state.typeCase])
+        }
+      ]
+    };
+  };
+
   render() {
     return (
       <>
@@ -83,12 +120,12 @@ class Dashboard extends React.Component {
                         <Button
                           tag="label"
                           className={classNames("btn-simple", {
-                            active: this.state.bigChartData === "data1"
+                            active: this.state.typeCase === "confirmed"
                           })}
                           color="info"
                           id="0"
                           size="sm"
-                          onClick={() => this.setBgChartData("data1")}
+                          onClick={() => this.setTypeCase("confirmed")}
                         >
                           <input
                             defaultChecked
@@ -109,9 +146,9 @@ class Dashboard extends React.Component {
                           size="sm"
                           tag="label"
                           className={classNames("btn-simple", {
-                            active: this.state.bigChartData === "data2"
+                            active: this.state.typeCase === "deaths"
                           })}
-                          onClick={() => this.setBgChartData("data2")}
+                          onClick={() => this.setTypeCase("deaths")}
                         >
                           <input
                             className="d-none"
@@ -131,9 +168,9 @@ class Dashboard extends React.Component {
                           size="sm"
                           tag="label"
                           className={classNames("btn-simple", {
-                            active: this.state.bigChartData === "data3"
+                            active: this.state.typeCase === "recovered"
                           })}
-                          onClick={() => this.setBgChartData("data3")}
+                          onClick={() => this.setTypeCase("recovered")}
                         >
                           <input
                             className="d-none"
@@ -153,10 +190,7 @@ class Dashboard extends React.Component {
                 </CardHeader>
                 <CardBody>
                   <div className="chart-area">
-                    <Line
-                      data={chartExample1[this.state.bigChartData]}
-                      options={chartExample1.options}
-                    />
+                    <Line data={this.data} options={options} />
                   </div>
                 </CardBody>
               </Card>
